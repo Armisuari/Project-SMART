@@ -1,0 +1,4 @@
+{
+    "idf.port": "/dev/cu.usbserial-0001",
+    "cmake.sourceDirectory": "/Users/efishery/macca_lab/Project-SMART/.pio/libdeps/esp32devkitC-V4-debug/Adafruit BusIO"
+}
