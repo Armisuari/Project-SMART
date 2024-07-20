@@ -1,44 +1,64 @@
+
+// #define TEST
+
+#ifdef TEST
 // #include "miscellaneous/I2C_Scanner.h"
 // #include "miscellaneous/emonlib_test.h"
 // #include "miscellaneous/ADS1115_emon.h"
+// #include "miscellaneous/ADS_test.h"
+// #include "miscellaneous/St7789_test.h"
+#include "miscellaneous/ssd1306_test.h"
+// #include "miscellaneous/buzzer_test.h"
+// #include "miscellaneous/telegram_test.h"
 
+#else
 #include <Arduino.h>
-#include <WiFi.h>
+#include <WifiHandler.h>
 
 #include <CurrentDetection.h>
 #include <drivers/esp32/CurrentMeter_ADS.h>
+#include <drivers/esp32/Display_SSD1306.h>
+#include <drivers/esp32/Time_NTP.h>
+#include <drivers/esp32/Storage_LittleFS.h>
+#include <drivers/esp32/Alarm_Buzzer.h>
+#include <drivers/esp32/Alarm_Telegram.h>
 
-// TODO: Add autoformatter for a consistent coding style.
-// Feature proposal:
-// * Settings store to the storage including timezone info.
-// and create timeFormatter(uint32_t unixtime) to follow timezone, for unit
-// testing purpose. Edge cases: +- UTC, UTC+24 +36,
-// * Download OpenWeather JSON and parse, for unit testing.
-// * Settings in JSON, for unit testing.
-// * Configuration via UART (or via WebUI for paid content), can be unit tested
-// *
 CurrentMeter_ADS currentMeter;
+Display_SSD1306 ssd1306;
+Time_NTP ntp;
+Storage_LittleFS lfs;
+Alarm_Buzzer buzzer;
+Alarm_Telegram telegram;
 
-CurrentDetection cd(currentMeter, &Serial);
+WifiHandler wifi{"GI.TALISE", "12345678"}; //Merubah setting wifi
+
+CurrentDetection cd(currentMeter, ntp, ssd1306, &Serial, lfs, buzzer, telegram);
 
 uint32_t meterLastUpdated = 0;
 
-void setup() {
+float thresHold = 30; //A | Merubah nilai batas arus
+
+void setup()
+{
   Serial.begin(115200);
-
-  cd.init();
-
+  wifi.init();
+  cd.init(thresHold);
   Serial.println("Current Detection Initialized.");
-
+  vTaskDelay(1000);
   meterLastUpdated = millis();
 }
 
-void loop() {
-//   if (millis() - meterLastUpdated >= ws._cfg.getInterval()) {
-  if (millis() - meterLastUpdated >= 500U) {
+void loop()
+{
+  if (millis() - meterLastUpdated >= cd._cfg.getInterval())
+  {
     meterLastUpdated = millis();
     cd.updateMeterData();
+    cd.update_wifi_connection();
+    cd.setAlarmEvent(true, true);
   }
 
-//   ws.checkSerialConfig();
+  // cd.checkSerialConfig();
 }
+
+#endif

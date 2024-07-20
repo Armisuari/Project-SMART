@@ -10,11 +10,13 @@ class CurrentMeter_ADS : public CurrentMeter
 {
 public:
     bool init();
-    float readCurrent();
+    float readCurrent(int index);
+    bool getCTconnection();
 
 private:
     const String _tag = "CurrentMeter";
     Adafruit_ADS1115 _ads;
-    const float factor = 30;
+    const float factor = 30; // sct13 30A
     const float multiplier = 0.00005;
+    bool _ctConnection;
 };
